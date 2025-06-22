@@ -76,4 +76,15 @@ rules:
       - "events"
     verbs:
       - "list"
+  - apiGroups:
+      - "batch"
+    resources:
+      - "jobs"
+    verbs:
+      - "create"
+      - "list"
+      - "get"
+      - "patch"
+      - "watch"
+      - "delete"
 {{- end }}
