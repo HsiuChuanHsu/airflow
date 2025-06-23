@@ -98,7 +98,11 @@ Flower dashboard:
 {{- else }}
 You can now access your dashboard(s) by executing the following command(s) and visiting the corresponding port at localhost in your browser:
 
+{{ if semverCompare "<3.0.0" .Values.airflowVersion }}
 Airflow Webserver:     kubectl port-forward svc/{{ include "airflow.fullname" . }}-webserver {{ .Values.ports.airflowUI }}:{{ .Values.ports.airflowUI }} --namespace {{ .Release.Namespace }}
+{{ else }}
+Airflow API server:     kubectl port-forward svc/{{ include "airflow.fullname" . }}-api-server {{ .Values.ports.airflowUI }}:{{ .Values.ports.airflowUI }} --namespace {{ .Release.Namespace }}
+{{ end }}
 
 {{- if .Values.flower.enabled }}
 {{- if or (contains "CeleryExecutor" .Values.executor) (contains "CeleryKubernetesExecutor" .Values.executor)}}
@@ -109,7 +113,7 @@ Flower dashboard:      kubectl port-forward svc/{{ include "airflow.fullname" . 
 {{- end }}
 
 
-{{- if .Values.webserver.defaultUser.enabled}}
+{{- if and .Values.webserver.defaultUser.enabled (semverCompare "<3.0.0" .Values.airflowVersion)}}
 Default Webserver (Airflow UI) Login credentials:
     username: {{ .Values.webserver.defaultUser.username }}
     password: {{ .Values.webserver.defaultUser.password }}
@@ -164,8 +168,8 @@ DEPRECATION WARNING:
 
 {{- end }}
 
-
-{{- if .Values.webserver.extraNetworkPolicies }}
+{{- if semverCompare "<3.0.0" .Values.airflowVersion}}
+{{- if and .Values.webserver.extraNetworkPolicies (semverCompare "<3.0.0" .Values.airflowVersion)}}
 
 DEPRECATION WARNING:
     `webserver.extraNetworkPolicies` has been renamed to `webserver.networkPolicy.peers`.
@@ -173,8 +177,8 @@ DEPRECATION WARNING:
 
 {{- end }}
 
-{{- if not (or .Values.webserverSecretKey .Values.webserverSecretKeySecretName) }}
 
+{{- if not (or .Values.webserverSecretKey .Values.webserverSecretKeySecretName) }}
 {{- if .Values.securityContext }}
 
  DEPRECATION WARNING:
@@ -193,6 +197,7 @@ unnecessary restarts of your Airflow components.
 Information on how to set a static webserver secret key can be found here:
 https://airflow.apache.org/docs/helm-chart/stable/production-guide.html#webserver-secret-key
 
+{{- end }}
 {{- end }}
 
 {{- if or .Values.postgresql.postgresqlUsername .Values.postgresql.postgresqlPassword }}
